@@ -241,9 +241,9 @@ let reduce =
     : 'acc =>
   switch trie {
   | Empty => acc
-  | Leaf(_, values) => values |> CopyOnWriteArray.reduce(~while_=predicate, f, acc)
+  | Leaf(_, values) => values |> CopyOnWriteArray.reduce(0, ~while_=predicate, f, acc)
   | Level(_, _, _, nodes) =>
-    nodes |> CopyOnWriteArray.reduce(~while_=triePredicate, trieReducer, acc)
+    nodes |> CopyOnWriteArray.reduce(0, ~while_=triePredicate, trieReducer, acc)
   };
 
 let reduceReversed =
@@ -357,7 +357,7 @@ let rec removeLastLeaf =
 let levelCountReducer = (acc, next) => acc + count(next);
 
 let computeLevelCount = (tries: array(t('a))) : int =>
-  tries |> CopyOnWriteArray.reduce(~while_=Functions.alwaysTrue2, levelCountReducer, 0);
+  tries |> CopyOnWriteArray.reduce(0, ~while_=Functions.alwaysTrue2, levelCountReducer, 0);
 
 let skipLevelImpl =
     (
@@ -494,8 +494,8 @@ let rec take =
 let rec toSequence = (trie: t('a)) : Sequence.t('a) =>
   switch trie {
   | Empty => Sequence.empty()
-  | Leaf(_, values) => values |> CopyOnWriteArray.toSequence
-  | Level(_, _, _, nodes) => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap(toSequence)
+  | Leaf(_, values) => values |> CopyOnWriteArray.toSequence(0)
+  | Level(_, _, _, nodes) => nodes |> CopyOnWriteArray.toSequence(0) |> Sequence.flatMap(toSequence)
   };
 
 let rec toSequenceReversed = (trie: t('a)) : Sequence.t('a) =>

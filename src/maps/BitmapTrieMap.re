@@ -123,7 +123,7 @@ let reduceWhile =
     : 'acc =>
   switch map {
   | Level(_, nodes, _) =>
-    nodes |> CopyOnWriteArray.reduce(~while_=levelPredicate, levelReducer, acc)
+    nodes |> CopyOnWriteArray.reduce(0, ~while_=levelPredicate, levelReducer, acc)
   | Collision(_, entryMap) => entryMap |> AVLTreeMap.reduceWhile(predicate, f, acc)
   | Entry(_, entryKey, entryValue) =>
     if (predicate(acc, entryKey, entryValue)) {
@@ -165,7 +165,7 @@ let reduce =
 let rec toSequence = (selector: ('k, 'v) => 'c, map: t('k, 'v)) : Sequence.t('c) =>
   switch map {
   | Level(_, nodes, _) =>
-    nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap(toSequence(selector))
+    nodes |> CopyOnWriteArray.toSequence(0) |> Sequence.flatMap(toSequence(selector))
   | Collision(_, entryMap) => AVLTreeMap.toSequence(selector, entryMap)
   | Entry(_, entryKey, entryValue) => Sequence.return(selector(entryKey, entryValue))
   | Empty => Sequence.empty()

@@ -97,7 +97,7 @@ let reduceWhile =
     : 'acc =>
   switch map {
   | Level(_, nodes, _) =>
-    nodes |> CopyOnWriteArray.reduce(~while_=levelPredicate, levelReducer, acc)
+    nodes |> CopyOnWriteArray.reduce(0, ~while_=levelPredicate, levelReducer, acc)
   | Collision(_, entrySet) => entrySet |> AVLTreeSet.reduceWhile(predicate, f, acc)
   | Entry(_, entryValue) =>
     if (predicate(acc, entryValue)) {
@@ -183,7 +183,7 @@ let rec remove =
 
 let rec toSequence = (set: t('a)) : Sequence.t('a) =>
   switch set {
-  | Level(_, nodes, _) => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap(toSequence)
+  | Level(_, nodes, _) => nodes |> CopyOnWriteArray.toSequence(0) |> Sequence.flatMap(toSequence)
   | Collision(_, entrySet) => AVLTreeSet.toSequence(entrySet)
   | Entry(_, entryValue) => Sequence.return(entryValue)
   | Empty => Sequence.empty()

@@ -14,6 +14,26 @@ type t =
 
 type updateLevelNode = (Transient.Owner.t, int, t, t) => t;
 
+let updateLevelNodePersistent =
+    (_: Transient.Owner.t, index: int, childNode: t, Level(bitmap, nodes, _): t)
+    : t =>
+  Level(bitmap, CopyOnWriteArray.update(index, childNode, nodes), Transient.Owner.none);
+
+let updateLevelNodeTransient =
+    (
+      owner: Transient.Owner.t,
+      index: int,
+      childNode: t,
+      Level(bitmap, nodes, nodeOwner) as node: t
+    )
+    : t =>
+  if (nodeOwner === owner) {
+    nodes[index] = childNode;
+    node
+  } else {
+    Level(bitmap, CopyOnWriteArray.update(index, childNode, nodes), owner)
+  };
+
 let rec add =
         (
           updateLevelNode: updateLevelNode,
@@ -45,7 +65,7 @@ let rec add =
       set
     } else {
       let bitmap = BitmapTrie.bitPos(entryValue, depth);
-      Level(bitmap, [|set|], owner) |> add(updateLevelNode, owner, depth, value)
+      Level(bitmap, [|set|], owner) |> add(updateLevelNodeTransient, owner, depth, value)
     }
   | Empty => Entry(value)
   };
@@ -72,7 +92,7 @@ let reduceWhile =
     : 'acc =>
   switch map {
   | Level(_, nodes, _) =>
-    nodes |> CopyOnWriteArray.reduce(~while_=levelPredicate, levelReducer, acc)
+    nodes |> CopyOnWriteArray.reduce(0, ~while_=levelPredicate, levelReducer, acc)
   | Entry(entryValue) =>
     if (predicate(acc, entryValue)) {
       f(acc, entryValue)
@@ -142,27 +162,7 @@ let rec remove =
 
 let rec toSequence = (set: t) : Sequence.t(int) =>
   switch set {
-  | Level(_, nodes, _) => nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap(toSequence)
+  | Level(_, nodes, _) => nodes |> CopyOnWriteArray.toSequence(0) |> Sequence.flatMap(toSequence)
   | Entry(entryValue) => Sequence.return(entryValue)
   | Empty => Sequence.empty()
-  };
-
-let updateLevelNodePersistent =
-    (_: Transient.Owner.t, index: int, childNode: t, Level(bitmap, nodes, _): t)
-    : t =>
-  Level(bitmap, CopyOnWriteArray.update(index, childNode, nodes), Transient.Owner.none);
-
-let updateLevelNodeTransient =
-    (
-      owner: Transient.Owner.t,
-      index: int,
-      childNode: t,
-      Level(bitmap, nodes, nodeOwner) as node: t
-    )
-    : t =>
-  if (nodeOwner === owner) {
-    nodes[index] = childNode;
-    node
-  } else {
-    Level(bitmap, CopyOnWriteArray.update(index, childNode, nodes), owner)
   };

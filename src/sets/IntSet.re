@@ -40,7 +40,7 @@ let add = (value: int, {count, root} as set: t) : t => {
   }
 };
 
-let emptyInstance: t = {count: 0, root: BitmapTrieIntSet.Empty};
+let emptyInstance: t = {count: 0, root: BitmapTrieIntSet.empty};
 
 let empty = () : t => emptyInstance;
 

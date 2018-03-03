@@ -77,7 +77,7 @@ let reduceWhile =
     : 'acc =>
   switch map {
   | Level(_, nodes, _) =>
-    nodes |> CopyOnWriteArray.reduce(~while_=levelPredicate, levelReducer, acc)
+    nodes |> CopyOnWriteArray.reduce(0, ~while_=levelPredicate, levelReducer, acc)
   | Entry(key, value) =>
     if (predicate(acc, key, value)) {
       f(acc, key, value)
@@ -119,7 +119,7 @@ let rec toSequence = (selector: (int, 'v) => 'c, map: t('v)) : Sequence.t('c) =>
   switch map {
   | Entry(key, value) => Sequence.return(selector(key, value))
   | Level(_, nodes, _) =>
-    nodes |> CopyOnWriteArray.toSequence |> Sequence.flatMap(toSequence(selector))
+    nodes |> CopyOnWriteArray.toSequence(0) |> Sequence.flatMap(toSequence(selector))
   | Empty => Sequence.empty()
   };
 

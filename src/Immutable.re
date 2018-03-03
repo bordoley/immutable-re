@@ -831,6 +831,10 @@ module ReadOnlyArray = {
       {
         type elt('a) = 'a;
         include CopyOnWriteArray;
+
+        let reduce = (~while_, f, acc, arr) =>
+          CopyOnWriteArray.reduce(0, ~while_, f, acc, arr);
+        let toSequence = (arr) => CopyOnWriteArray.toSequence(0, arr);
       }
     ):
       Indexed.S1 with type t('a) := t('a)

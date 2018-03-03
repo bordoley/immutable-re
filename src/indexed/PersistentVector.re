@@ -51,9 +51,9 @@ let reduce =
            f,
            acc
          );
-    let acc = left |> CopyOnWriteArray.reduce(~while_=Functions.alwaysTrue2, f, acc);
+    let acc = left |> CopyOnWriteArray.reduce(0, ~while_=Functions.alwaysTrue2, f, acc);
     let acc = trieReducer(acc, middle);
-    let acc = right |> CopyOnWriteArray.reduce(~while_=Functions.alwaysTrue2, f, acc);
+    let acc = right |> CopyOnWriteArray.reduce(0, ~while_=Functions.alwaysTrue2, f, acc);
     acc
   } else {
     let shouldContinue = ref(true);
@@ -65,7 +65,7 @@ let reduce =
     let triePredicate = (_, _) => shouldContinue^;
     let rec trieReducer = (acc) =>
       IndexedTrie.reduce(~triePredicate, ~trieReducer, ~while_=predicate, f, acc);
-    let acc = left |> CopyOnWriteArray.reduce(~while_=predicate, f, acc);
+    let acc = left |> CopyOnWriteArray.reduce(0, ~while_=predicate, f, acc);
     let acc =
       if (shouldContinue^) {
         trieReducer(acc, middle)
@@ -73,7 +73,7 @@ let reduce =
         acc
       };
     if (shouldContinue^) {
-      CopyOnWriteArray.reduce(~while_=predicate, f, acc, right)
+      CopyOnWriteArray.reduce(0, ~while_=predicate, f, acc, right)
     } else {
       acc
     }
@@ -127,9 +127,9 @@ let reduceReversed =
 
 let toSequence = ({left, middle, right}: t('a)) : Sequence.t('a) =>
   Sequence.concat([
-    CopyOnWriteArray.toSequence(left),
+    CopyOnWriteArray.toSequence(0)(left),
     IndexedTrie.toSequence(middle),
-    CopyOnWriteArray.toSequence(right)
+    CopyOnWriteArray.toSequence(0)(right)
   ]);
 
 let toSequenceReversed = ({left, middle, right}: t('a)) : Sequence.t('a) =>
